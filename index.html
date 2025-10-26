@@ -3,527 +3,609 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Hostel Hub</title>
-    <!-- Load Tailwind CSS -->
+    <title>Smart Hostel Hub V2</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Global Styles and Inter Font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
-            min-height: 100vh;
+            background-color: #f7f9fb;
         }
-
-        /* --- PRE-LOADER STYLES --- */
-        #preloader {
-            position: fixed;
-            inset: 0;
-            background-color: #4338ca; /* Indigo 700 */
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Use style transition for fade-out */
-            transition: opacity 0.7s ease-out, visibility 0.7s; 
-            opacity: 1; /* Ensure it starts opaque */
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
-
-        /* The main app container should be visible by default, and the preloader hides it. */
-        #app {
-            min-height: 100vh;
-            display: flex; /* Ensure app uses flex for its layout */
-            flex-direction: column;
-        }
-        
-        /* --- Custom Nav Button State --- */
-        .nav-btn.active {
-            background-color: #f5f3ff; /* Indigo 50 */
-            color: #4338ca; /* Indigo 700 */
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 3px solid transparent;
             font-weight: 600;
+            color: #6b7280;
         }
-        .nav-btn:not(.active):hover {
-            background-color: #f3f4f6; /* Gray 100 */
+        .tab-button.active {
+            color: #1d4ed8;
+            border-bottom-color: #1d4ed8;
         }
-
-        /* Ensure main content takes up full width on small screens */
-        @media (min-width: 1024px) {
-            #main-layout {
-                grid-template-columns: 250px 1fr;
-            }
+        .tab-content {
+            display: none;
+            padding: 1rem 0;
+        }
+        .tab-content.active {
+            display: block;
         }
     </style>
 </head>
-<body>
+<body class="p-4 sm:p-8">
 
-    <!-- ULTIMATE LOADING PRE-LOADER -->
-    <div id="preloader">
-        <div class="text-white text-center animate-pulse p-8 rounded-xl">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-white mx-auto mb-4"></div>
-            <p class="text-xl font-bold tracking-wider">Loading Smart Hostel Hub...</p>
-            <p class="text-sm mt-2 text-indigo-200">Initializing Core Services.</p>
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-500 mx-auto"></div>
+            <p class="mt-4 text-gray-700">Connecting to Hostel Database...</p>
         </div>
     </div>
-    
-    <!-- MAIN APP CONTAINER -->
-    <div id="app" class="min-h-screen">
-        <!-- Header -->
-        <header id="app-header" class="bg-indigo-700 shadow-lg sticky top-0 z-10">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center h-16">
-                <!-- Removed (DEMO) tag -->
-                <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Smart Hostel Hub</h1>
-                <!-- Changed toast message -->
-                <button onclick="showToast('Feature temporarily disabled.', 'error')" class="p-2 rounded-full hover:bg-indigo-600 transition duration-150 text-white" title="Sign Out">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                </button>
-            </div>
-        </header>
 
-        <!-- Main Content Area with Sidebar and Dynamic View -->
-        <main class="flex-1 container mx-auto p-4 sm:p-6 lg:p-8">
-            <div id="main-layout" class="grid grid-cols-1 lg:grid-cols-layout gap-6">
-                
-                <!-- Navigation Sidebar -->
-                <nav id="sidebar-nav" class="bg-white p-4 rounded-xl shadow-xl h-fit">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-4">Features</h2>
-                    <ul class="space-y-1">
-                        <li>
-                            <button id="nav-feedback" onclick="setView('feedback')" class="nav-btn active w-full flex items-center p-3 rounded-lg transition duration-150">
-                                <i data-lucide="utensils" class="w-5 h-5 mr-3"></i> Mess Feedback
-                            </button>
-                        </li>
-                        <li>
-                            <button id="nav-complaint" onclick="setView('complaint')" class="nav-btn w-full flex items-center p-3 rounded-lg transition duration-150">
-                                <i data-lucide="wrench" class="w-5 h-5 mr-3"></i> Issue Reporting
-                            </button>
-                        </li>
-                        <li>
-                            <button id="nav-dashboard" onclick="setView('dashboard')" class="nav-btn w-full flex items-center p-3 rounded-lg transition duration-150">
-                                <i data-lucide="list-checks" class="w-5 h-5 mr-3"></i> Issues Dashboard
-                            </button>
-                        </li>
-                         <li>
-                            <button id="nav-menu" onclick="setView('menu')" class="nav-btn w-full flex items-center p-3 rounded-lg transition duration-150">
-                                <i data-lucide="book-open" class="w-5 h-5 mr-3"></i> Daily Menu
-                            </button>
-                        </li>
-                    </ul>
-                    <div id="user-info" class="mt-4 p-2 text-xs text-gray-500 border-t pt-2">
-                        <!-- Simplified user ID display -->
-                        <span id="user-display">User ID: PRESENTATION_USER</span>
+    <header class="mb-8">
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                <i data-lucide="building-2" class="w-8 h-8 mr-2 text-indigo-600"></i>
+                Smart Hostel Hub
+            </h1>
+            <div class="text-sm text-gray-500 hidden sm:block">
+                Welcome, User <span id="user-id-display" class="font-mono bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs">Loading...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Column 1: Mess Menu & Feedback (Refactored for 4 Meals) -->
+        <section class="lg:col-span-2 card p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i data-lucide="utensils" class="w-5 h-5 mr-2 text-green-600"></i>
+                Mess Menu & Feedback (Today)
+            </h2>
+
+            <div class="border-b border-gray-200 mb-4 flex space-x-2 overflow-x-auto">
+                <button class="tab-button active" data-meal="Breakfast">Breakfast</button>
+                <button class="tab-button" data-meal="Lunch">Lunch</button>
+                <button class="tab-button" data-meal="Snack">Snack</button>
+                <button class="tab-button" data-meal="Dinner">Dinner</button>
+            </div>
+
+            <div id="menu-tabs-content">
+                <!-- Content will be rendered here by JS -->
+            </div>
+
+            <h3 class="text-lg font-medium text-gray-700 mt-6 mb-3 border-t pt-4">Submit Meal Feedback</h3>
+            <div id="feedback-form-container">
+                <p class="text-gray-500 mb-4">Tell us how the meal was! (Select a meal type above first)</p>
+                <div class="flex items-end space-x-3">
+                    <select id="feedback-meal-type" class="p-2 border border-gray-300 rounded-lg w-1/3">
+                        <option value="Breakfast">Breakfast</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Snack">Snack</option>
+                        <option value="Dinner">Dinner</option>
+                    </select>
+                    <input type="number" id="rating-input" min="1" max="5" placeholder="Rating (1-5)" class="p-2 border border-gray-300 rounded-lg w-1/3" required>
+                    <button onclick="submitMessFeedback()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg w-1/3 transition-colors">Submit</button>
+                </div>
+                <p id="feedback-message" class="mt-2 text-sm text-center" style="display: none;"></p>
+            </div>
+        </section>
+
+        <!-- Column 2: Notice Board (New Feature) -->
+        <section class="card p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i data-lucide="megaphone" class="w-5 h-5 mr-2 text-red-500"></i>
+                Official Notice Board
+            </h2>
+            <div id="notices-container" class="space-y-4">
+                <p class="text-gray-500">Loading announcements...</p>
+            </div>
+        </section>
+
+        <!-- New Row for Logistics -->
+        <section class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Column 3: Leave/Gate Pass Request (New Feature) -->
+            <div class="card p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i data-lucide="send" class="w-5 h-5 mr-2 text-yellow-600"></i>
+                    Request Leave / Gate Pass
+                </h2>
+                <form id="leave-request-form" class="space-y-4">
+                    <div>
+                        <label for="start-date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                        <input type="date" id="start-date" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" required>
                     </div>
-                </nav>
-
-                <!-- Dynamic View Area CONTAINER -->
-                <section id="content-view-container" class="flex-1 bg-white p-6 sm:p-8 rounded-xl shadow-xl min-h-[400px]">
-                    <div id="content-view" class="w-full h-full"></div>
-                </section>
+                    <div>
+                        <label for="end-date" class="block text-sm font-medium text-gray-700">End Date (Expected Return)</label>
+                        <input type="date" id="end-date" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="leave-reason" class="block text-sm font-medium text-gray-700">Reason for Leave</label>
+                        <textarea id="leave-reason" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" required></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Submit Leave Request</button>
+                    <p id="leave-request-message" class="mt-2 text-sm text-center" style="display: none;"></p>
+                </form>
             </div>
-        </main>
 
-        <!-- Toast Notification Area -->
-        <div id="toast-area" class="fixed bottom-4 right-4 space-y-2"></div>
-    </div>
-
-    <!-- SCRIPT FOR PRESENTATION MODE -->
-    <script>
-        // --- CLIENT-SIDE CONFIGURATION (Hidden from UI) ---
-        let userId = 'PRESENTATION_USER';
-        let isAuthReady = true; 
+            <!-- Column 4: My Leave Requests -->
+            <div class="card p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i data-lucide="clock" class="w-5 h-5 mr-2 text-blue-600"></i>
+                    My Leave Status
+                </h2>
+                <div id="leave-status-container" class="space-y-3">
+                    <p class="text-gray-500">No pending or recent leave requests found.</p>
+                </div>
+            </div>
+        </section>
         
-        // Mock data to display in the dashboard
-        const MOCK_ISSUES = [
-            {
-                id: 'mock-001',
-                type: 'Hostel Maintenance',
-                location: 'Room 403 - AC unit',
-                description: 'The air conditioning unit in room 403 is leaking water and making a loud rattling noise. Needs urgent attention.',
-                status: 'New',
-                createdAt: new Date(Date.now() - 3600000), // 1 hour ago
-                userId: 'user-403'
-            },
-            {
-                id: 'mock-002',
-                type: 'Mess Hygiene',
-                location: 'Dining Hall',
-                description: 'The salad bar tongs were left on the table surface for an extended period.',
-                status: 'In Progress',
-                createdAt: new Date(Date.now() - 86400000), // 1 day ago
-                userId: 'user-mess'
-            },
-            {
-                id: 'mock-003',
-                type: 'Warden Feedback',
-                location: 'General',
-                description: 'Excellent response time from the maintenance team for the lift repair last night.',
-                status: 'Resolved',
-                createdAt: new Date(Date.now() - (2 * 86400000)), // 2 days ago
-                userId: 'user-admin'
-            },
-        ];
+        <!-- Column 5: Issue Reporting and Tracking (Existing, now streamlined) -->
+        <section class="lg:col-span-3 card p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i data-lucide="hammer" class="w-5 h-5 mr-2 text-orange-600"></i>
+                Maintenance & Issue Reporting
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Issue Reporting Form -->
+                <div class="md:col-span-1 space-y-4">
+                    <h3 class="text-lg font-medium text-gray-700">Report New Issue</h3>
+                    <select id="issue-type" class="w-full p-2 border border-gray-300 rounded-lg">
+                        <option value="Plumbing">Plumbing Leak/Blockage</option>
+                        <option value="Electrical">Electrical Failure/Fault</option>
+                        <option value="Furniture">Furniture Damage (Bed, Chair, Table)</option>
+                        <option value="Sanitation">Sanitation/Cleaning Required</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="issue-location" placeholder="Room/Block Number (e.g., A-305)" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                    <textarea id="issue-description" rows="3" placeholder="Detailed description of the problem..." class="w-full p-2 border border-gray-300 rounded-lg" required></textarea>
+                    <button onclick="submitIssueReport()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Submit Report</button>
+                    <p id="issue-report-message" class="mt-2 text-sm text-center" style="display: none;"></p>
+                </div>
 
-        // --- Core Application Loading Function ---
-        function initializeAppAndAuth() {
-            const preloader = document.getElementById('preloader');
-            
-            // 1. Load initial view
-            setView('feedback');
-            
-            // 2. Hide the preloader using the CSS transition
-            preloader.style.opacity = '0';
-            
-            // 3. Completely remove the preloader element after transition ends
-            setTimeout(() => {
-                preloader.style.visibility = 'hidden';
-                preloader.remove();
-            }, 700);
-        }
+                <!-- Issue Tracking List -->
+                <div class="md:col-span-2">
+                    <h3 class="text-lg font-medium text-gray-700">My Reported Issues</h3>
+                    <div id="issue-tracking-list" class="space-y-3 mt-3">
+                        <p class="text-gray-500">Loading issues...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        window.onload = initializeAppAndAuth;
+    </main>
 
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, collection, query, where, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Set Firebase logging level to Debug
+        setLogLevel('Debug');
+
+        // Global Firebase variables
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let userName = "Anonymous User"; // Placeholder name
+
+        // Global configuration variables (MUST be used)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-hostel-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         // --- Utility Functions ---
-
-        /** Shows a temporary toast notification */
-        window.showToast = function(message, type = 'success') {
-            const toastArea = document.getElementById('toast-area');
-            const color = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-            const icon = type === 'success' ? 'check-circle' : 'x-circle';
-
-            const toast = document.createElement('div');
-            toast.className = `${color} text-white px-4 py-3 rounded-xl shadow-lg flex items-center max-w-xs`;
-            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 mr-3"></i> ${message}`;
-
-            toastArea.appendChild(toast);
-            lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
-                toast.addEventListener('transitionend', () => toast.remove());
-            }, 3000);
-        }
-
-        /** Converts a string to Sentence Case */
-        function toSentenceCase(str) {
-            if (!str) return '';
-            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-        }
-
-        // --- Data Submission Functions (MOCKED) ---
-
-        /** Mocks submission of mess feedback */
-        window.submitMessFeedback = function() {
-            if (!isAuthReady) return showToast("Application is initializing. Please try again.", 'error');
-
-            const ratingElement = document.getElementById('overall-rating');
-            const commentElement = document.getElementById('overall-comment');
-
-            const rating = ratingElement ? parseInt(ratingElement.value, 10) : 0;
-            const comment = commentElement ? commentElement.value.trim() : '';
-
-            if (rating === 0) {
-                return showToast("Please select an overall meal rating.", 'error');
+        function getCollectionPath(type, uid = null) {
+            switch(type) {
+                case 'mess_menu':
+                    return `artifacts/${appId}/public/data/mess_menu`;
+                case 'notices':
+                    return `artifacts/${appId}/public/data/notices`;
+                case 'leave_requests':
+                case 'issues':
+                case 'feedback':
+                    return `artifacts/${appId}/users/${uid || userId}/${type}`;
+                default:
+                    console.error("Unknown collection type:", type);
+                    return null;
             }
-
-            // MOCKED SUCCESS RESPONSE
-            showToast(`Feedback for today's meal submitted successfully!`, 'success');
-            
-            // Reset form
-            if(ratingElement) ratingElement.value = '5';
-            if(commentElement) commentElement.value = '';
-        };
-
-        /** Mocks submission of a General Issue/Complaint */
-        window.submitComplaint = function() {
-            if (!isAuthReady) return showToast("Application is initializing. Please try again.", 'error');
-
-            const type = document.getElementById('issue-type').value;
-            const description = document.getElementById('issue-description').value.trim();
-
-            if (!type || !description) return showToast("Please select a category and provide a detailed description.", 'error');
-
-            // MOCKED SUCCESS RESPONSE
-            showToast(`Issue related to "${type}" reported successfully.`, 'success');
-            
-            // Reset form
-            document.getElementById('issue-location').value = '';
-            document.getElementById('issue-description').value = '';
-        };
-
-        // --- Data Fetching and Real-Time Updates (MOCKED) ---
-
-        /** Uses mock data for the dashboard */
-        function fetchIssues() {
-            // In presentation mode, we just pass the mock data immediately.
-            renderDashboard(MOCK_ISSUES);
+        }
+        
+        function getTodayDateId() {
+            return new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
         }
 
-        // --- View Rendering Logic ---
+        // --- Firebase Initialization and Auth ---
+        window.onload = async function() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
 
-        window.setView = function(viewName) {
-            if (!isAuthReady) return showToast("Application services are not ready yet.", 'error');
+                    // Sign-in logic
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Signed in with custom token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Signed in anonymously.");
+                    }
 
-            const contentView = document.getElementById('content-view');
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            // Display full user ID as required for multi-user apps
+                            document.getElementById('user-id-display').textContent = userId;
+                            document.getElementById('loading-overlay').style.display = 'none';
 
-            // Subtle content transition
-            contentView.style.opacity = '0';
-            
-            // Clear current content
-            contentView.innerHTML = '';
+                            // Start listeners after authentication is ready
+                            startDataListeners();
+                        } else {
+                            // Should not happen if signInAnonymously is successful, but handle logout/error
+                            userId = null;
+                            document.getElementById('user-id-display').textContent = 'Error/Signed Out';
+                            document.getElementById('loading-overlay').style.display = 'none';
+                        }
+                        // Re-initialize icons
+                        lucide.createIcons();
+                    });
 
-            const navButtons = document.querySelectorAll('.nav-btn');
-            navButtons.forEach(btn => {
-                btn.classList.remove('active');
+                } else {
+                    console.error("Firebase config is missing or invalid.");
+                    document.getElementById('loading-overlay').innerHTML = '<p class="text-red-600">Configuration Error: Firebase setup failed.</p>';
+                }
+            } catch (error) {
+                console.error("Error during Firebase initialization:", error);
+                document.getElementById('loading-overlay').innerHTML = '<p class="text-red-600">Initialization Error: Check console for details.</p>';
+            }
+        };
+
+        // --- Data Listeners ---
+        function startDataListeners() {
+            if (!db || !userId) return;
+
+            // 1. Mess Menu Listener (Public Data)
+            const todayDateId = getTodayDateId();
+            const menuDocRef = doc(db, getCollectionPath('mess_menu'), todayDateId);
+            onSnapshot(menuDocRef, (docSnap) => {
+                const menuData = docSnap.exists() ? docSnap.data().meals : null;
+                renderMessMenu(menuData);
+            }, (error) => {
+                console.error("Error fetching menu:", error);
+                renderMessMenu(null);
             });
 
-            const activeBtn = document.getElementById(`nav-${viewName}`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            }
+            // 2. Notices Listener (Public Data)
+            const noticesQuery = query(collection(db, getCollectionPath('notices')));
+            onSnapshot(noticesQuery, (snapshot) => {
+                const notices = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderNotices(notices.sort((a, b) => b.timestamp - a.timestamp)); // Sort newest first
+            }, (error) => {
+                console.error("Error fetching notices:", error);
+                document.getElementById('notices-container').innerHTML = '<p class="text-red-500">Failed to load notices.</p>';
+            });
 
-            setTimeout(() => {
-                switch (viewName) {
-                    case 'feedback':
-                        contentView.innerHTML = renderMessFeedbackForm();
-                        break;
-                    case 'complaint':
-                        contentView.innerHTML = renderComplaintForm();
-                        break;
-                    case 'dashboard':
-                        contentView.innerHTML = renderDashboardPlaceholder();
-                        fetchIssues(); // Calls the mock data function
-                        break;
-                    case 'menu':
-                        contentView.innerHTML = renderDailyMenu();
-                        break;
-                    default:
-                        contentView.innerHTML = renderMessFeedbackForm();
-                }
-                lucide.createIcons();
-                // Fade content back in
-                contentView.style.opacity = '1';
-                contentView.style.transition = 'opacity 0.3s ease-in-out';
-            }, 50); // Small delay to allow transition effect
-        };
+            // 3. My Issues Listener (Private Data)
+            const issuesQuery = query(collection(db, getCollectionPath('issues')), where("userId", "==", userId));
+            onSnapshot(issuesQuery, (snapshot) => {
+                const issues = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderIssueTracking(issues.sort((a, b) => b.timestamp - a.timestamp)); // Sort newest first
+            }, (error) => {
+                console.error("Error fetching issues:", error);
+                document.getElementById('issue-tracking-list').innerHTML = '<p class="text-red-500">Failed to load issues.</p>';
+            });
 
-        function renderMessFeedbackForm() {
-            return `
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Daily Mess Feedback</h2>
-                <div class="p-6 bg-gray-50 rounded-xl shadow-inner">
-                    <p class="text-gray-600 mb-6">Rate today's meal to help us auto-optimize the menu and improve food quality. Your input directly influences future meals!</p>
-                    
-                    <!-- Overall Rating Section -->
-                    <div class="mb-6">
-                        <label for="overall-rating" class="block text-sm font-semibold text-gray-700 mb-2">Overall Meal Rating (1 = Terrible, 5 = Excellent)</label>
-                        <select id="overall-rating" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150">
-                            <option value="5" selected>5 - Excellent, I loved it!</option>
-                            <option value="4">4 - Good, Satisfactory</option>
-                            <option value="3">3 - Okay, Nothing special</option>
-                            <option value="2">2 - Poor, Needs significant improvement</option>
-                            <option value="1">1 - Terrible, Barely edible</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Detailed Comment Section -->
-                    <div class="mb-8">
-                        <label for="overall-comment" class="block text-sm font-semibold text-gray-700 mb-2">Suggestions / Detailed Comment (Optional)</label>
-                        <textarea id="overall-comment" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150" placeholder="e.g., 'The gravy was too salty' or 'We need more variety in breakfast.'"></textarea>
-                    </div>
-
-                    <button onclick="submitMessFeedback()" class="px-6 py-3 bg-indigo-700 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-800 transition duration-200">
-                        Submit Feedback
-                    </button>
-                </div>
-            `;
+            // 4. My Leave Requests Listener (Private Data)
+            const leaveQuery = query(collection(db, getCollectionPath('leave_requests')), where("userId", "==", userId));
+            onSnapshot(leaveQuery, (snapshot) => {
+                const requests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderLeaveRequests(requests.sort((a, b) => b.timestamp - a.timestamp)); // Sort newest first
+            }, (error) => {
+                console.error("Error fetching leave requests:", error);
+                document.getElementById('leave-status-container').innerHTML = '<p class="text-red-500">Failed to load leave requests.</p>';
+            });
         }
 
+        // --- UI Rendering Functions ---
 
-        function renderComplaintForm() {
-            return `
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">General Issue & Query Reporting</h2>
-                <div class="bg-gray-50 p-6 rounded-xl shadow-inner">
-                    <p class="text-gray-600 mb-6">Report broken facilities, provide feedback on staff, or submit a college-related query.</p>
+        // Renders the 4-meal menu data and sets up tabs
+        function renderMessMenu(data) {
+            const container = document.getElementById('menu-tabs-content');
+            container.innerHTML = '';
+            const meals = ["Breakfast", "Lunch", "Snack", "Dinner"];
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="issue-type" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                            <select id="issue-type" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150">
-                                <option value="">Select a Category</option>
-                                <option value="Hostel Maintenance">Hostel Maintenance (Fan, Tap, Wi-Fi)</option>
-                                <option value="Warden Feedback">Warden Feedback</option>
-                                <option value="Staff/Worker Feedback">Staff/Worker Feedback (Cleaning, Mess)</option>
-                                <option value="College Query">College Query (Administration, Fees, etc.)</option>
-                                <option value="Mess Hygiene">Mess/Hygiene Issue</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="issue-location" class="block text-sm font-medium text-gray-700 mb-2">Specific Location / Staff Name (Optional)</label>
-                            <input type="text" id="issue-location" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150" placeholder="e.g., Room 301 Fan, Mess Worker John Doe">
-                        </div>
-                    </div>
-
-                    <div class="mb-8">
-                        <label for="issue-description" class="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
-                        <textarea id="issue-description" rows="5" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150" placeholder="Please describe the issue or query clearly."></textarea>
-                    </div>
-
-                    <button onclick="submitComplaint()" class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-md hover:bg-red-700 transition duration-200">
-                        Report Issue / Submit Query
-                    </button>
-                </div>
-            `;
-        }
-
-        function renderDashboardPlaceholder() {
-            return `
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Open Issues Dashboard</h2>
-                <!-- Removed DEMO MODE warning -->
-                <div id="issues-list" class="space-y-4">
-                    <div class="text-gray-500 text-center p-8 bg-gray-100 rounded-xl">
-                        <p>Loading issues...</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        /** Renders the list of issues using MOCK data */
-        function renderDashboard(issues) {
-            const issuesList = document.getElementById('issues-list');
-            if (!issuesList) return;
-
-            if (issues.length === 0) {
-                issuesList.innerHTML = `<div class="text-center p-8 bg-green-50 rounded-xl border border-green-200 text-green-700">No issues currently open.</div>`;
+            if (!data) {
+                container.innerHTML = `<p class="text-gray-600 mt-4 p-4 bg-red-50 rounded-lg">Mess menu not set for today (${getTodayDateId()}).</p>`;
                 return;
             }
 
-            // Sort by creation date (newest first)
-            const issueCards = issues.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map(issue => {
-                let statusColor = 'bg-gray-500';
-                if (issue.status === 'New') statusColor = 'bg-red-500';
-                else if (issue.status === 'In Progress') statusColor = 'bg-yellow-500';
-                else if (issue.status === 'Resolved') statusColor = 'bg-green-500';
-                
-                const date = issue.createdAt ? issue.createdAt.toLocaleString() : 'N/A';
-                const locationDisplay = issue.location && issue.location !== 'N/A' ? `<span class="font-medium text-gray-900">${issue.location} - </span>` : '';
+            meals.forEach((mealType, index) => {
+                const mealData = data[mealType] || { items: ["Menu not available."], feedback: 0 };
+                const isActive = index === 0 ? 'active' : '';
+                const ratingDisplay = mealData.feedback > 0 
+                    ? `<span class="font-bold text-yellow-600">${mealData.feedback.toFixed(1)}/5.0</span>`
+                    : `<span class="text-gray-400">No feedback yet.</span>`;
 
-                return `
-                    <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 ${issue.status === 'New' ? 'border-red-500' : issue.status === 'In Progress' ? 'border-yellow-500' : 'border-green-500'} transition duration-150 hover:shadow-xl">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-semibold text-gray-800">${toSentenceCase(issue.type)} Report</h3>
-                            <span class="px-3 py-1 text-xs font-medium text-white rounded-full ${statusColor}">
-                                ${issue.status}
-                            </span>
-                        </div>
-                        <p class="text-sm text-gray-500 mb-3">
-                            ${locationDisplay} Reported by User ID: <span class="font-mono text-xs text-gray-600">${issue.userId}</span> on ${date}
-                        </p>
-                        <p class="text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">${issue.description}</p>
-                    </div>
-                `;
-            }).join('');
-
-            issuesList.innerHTML = issueCards;
-        }
-
-        // Mock Menu Data
-        const mockMenu = [
-            { time: "Breakfast (7:30 AM)", id: "breakfast", items: [
-                { name: "Poha", calories: 250, allergens: ["Nuts"], note: "Vote: 4.2/5" },
-                { name: "Boiled Eggs", calories: 80, allergens: ["Eggs"], note: "Vote: 4.5/5" },
-                { name: "Milk & Corn Flakes", calories: 150, allergens: ["Dairy", "Gluten"], note: "" }
-            ]},
-            { time: "Lunch (1:00 PM)", id: "lunch", items: [
-                { name: "Dal Tadka", calories: 180, allergens: [], note: "Vote: 3.1/5" },
-                { name: "Aloo Gobi", calories: 220, allergens: [], note: "" },
-                { name: "3 Chapatis", calories: 240, allergens: ["Gluten"], note: "" },
-                { name: "Rice & Salad", calories: 200, allergens: [], note: "" }
-            ]},
-            { time: "Snack (5:00 PM)", id: "snack", items: [
-                { name: "Samosa (1 pc)", calories: 280, allergens: ["Gluten"], note: "Vote: 4.6/5 (Popular!)" },
-                { name: "Chai / Coffee", calories: 50, allergens: ["Dairy"], note: "" }
-            ]}
-            ,
-            { time: "Dinner (8:00 PM)", id: "dinner", items: [
-                { name: "Chicken Curry / Paneer Butter Masala", calories: 350, allergens: ["Dairy"], note: "" },
-                { name: "Jeera Rice", calories: 200, allergens: [], note: "" },
-                { name: "Raita", calories: 100, allergens: ["Dairy"], note: "Vote: 4.8/5" }
-            ]}
-        ];
-
-
-        function renderDailyMenu() {
-            const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-            // Get filter state
-            const filterElement = document.getElementById('allergy-filter');
-            const filterValue = filterElement ? filterElement.value : 'None';
-            let totalCalories = 0;
-
-            const menuHTML = mockMenu.map(meal => {
-                const filteredItems = meal.items.filter(item => {
-                    const containsFilteredAllergen = item.allergens.includes(filterValue);
-                    return filterValue === 'None' || !containsFilteredAllergen;
-                });
-
-                filteredItems.forEach(item => totalCalories += item.calories);
-
-                if (filteredItems.length === 0 && filterValue !== 'None') {
-                    return `
-                        <div class="bg-yellow-100 p-5 rounded-xl shadow-lg border-t-4 border-yellow-500">
-                            <h3 class="text-xl font-bold text-yellow-700 mb-2">${meal.time}</h3>
-                            <p class="text-sm">No items found for this meal that meet the **${filterValue}-free** filter criteria.</p>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="bg-white p-5 rounded-xl shadow-lg border-t-4 border-indigo-500">
-                        <h3 class="text-2xl font-bold text-indigo-700 mb-3">${meal.time}</h3>
-                        <ul class="space-y-2">
-                            ${filteredItems.map(item => `
-                                <li class="flex justify-between items-center p-3 border-b border-gray-100 last:border-b-0">
-                                    <div class="flex-1">
-                                        <span class="font-medium text-gray-800">${item.name}</span>
-                                        <p class="text-xs text-gray-500">
-                                            Allergens: <span class="text-red-600">${item.allergens.join(', ') || 'None'}</span> | Calories: ${item.calories} kcal
-                                        </p>
-                                    </div>
-                                    <span class="text-sm font-semibold text-green-600">${item.note}</span>
-                                </li>
-                            `).join('')}
+                container.innerHTML += `
+                    <div id="meal-${mealType}" class="tab-content ${isActive}">
+                        <p class="text-sm text-gray-500 mb-2">Average Rating: ${ratingDisplay}</p>
+                        <ul class="list-disc list-inside space-y-1 text-gray-700 p-3 bg-gray-50 rounded-lg">
+                            ${mealData.items.map(item => `<li>${item}</li>`).join('')}
                         </ul>
                     </div>
                 `;
-            }).join('');
+            });
 
-            return `
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Today's Mess Menu & Tracking</h2>
-                <p class="text-xl font-medium text-gray-600 mb-6">${today}</p>
+            // Set up tab switching logic
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.onclick = () => {
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-100 p-4 rounded-xl shadow-inner mb-6">
-                    <div>
-                        <label for="allergy-filter" class="block text-sm font-medium text-gray-700 mb-1">Allergy Filter **(Exclusion)**</label>
-                        <select id="allergy-filter" onchange="setView('menu')" class="w-full p-2 border border-gray-300 rounded-lg">
-                            <option value="None" ${filterValue === 'None' ? 'selected' : ''}>Show All (No Filter)</option>
-                            <option value="Gluten" ${filterValue === 'Gluten' ? 'selected' : ''}>Gluten-Free</option>
-                            <option value="Dairy" ${filterValue === 'Dairy' ? 'selected' : ''}>Dairy-Free</option>
-                            <option value="Nuts" ${filterValue === 'Nuts' ? 'selected' : ''}>Nut-Free</option>
-                            <option value="Eggs" ${filterValue === 'Eggs' ? 'selected' : ''}>Egg-Free</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex flex-col justify-center bg-indigo-100 p-3 rounded-lg border border-indigo-300">
-                        <p class="text-sm font-medium text-indigo-700">Estimated Total Calories (Filtered Menu):</p>
-                        <p class="text-2xl font-extrabold text-indigo-900">${totalCalories} kcal</p>
-                    </div>
-                </div>
+                    button.classList.add('active');
+                    document.getElementById(`meal-${button.dataset.meal}`).classList.add('active');
 
-                <div id="daily-menu-list" class="space-y-6">
-                    ${menuHTML}
-                </div>
-            `;
+                    // Sync feedback form selector
+                    document.getElementById('feedback-meal-type').value = button.dataset.meal;
+                };
+            });
         }
+
+        // Renders the Notice Board
+        function renderNotices(notices) {
+            const container = document.getElementById('notices-container');
+            if (notices.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No official announcements currently posted.</p>';
+                return;
+            }
+
+            container.innerHTML = notices.map(notice => {
+                const urgencyClass = notice.isUrgent ? 'bg-red-100 border-red-400 text-red-800' : 'bg-blue-100 border-blue-400 text-blue-800';
+                const date = notice.timestamp ? new Date(notice.timestamp.toDate()).toLocaleDateString() : 'N/A';
+                
+                return `
+                    <div class="p-4 border-l-4 ${urgencyClass} rounded-lg">
+                        <p class="font-semibold">${notice.title}</p>
+                        <p class="text-sm mt-1">${notice.content}</p>
+                        <p class="text-xs text-gray-600 mt-2">Posted on: ${date}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Renders the Leave Requests list
+        function renderLeaveRequests(requests) {
+            const container = document.getElementById('leave-status-container');
+            if (requests.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No pending or recent leave requests found.</p>';
+                return;
+            }
+
+            container.innerHTML = requests.map(req => {
+                let statusClass = '';
+                if (req.status === 'Approved') statusClass = 'text-green-600 bg-green-50';
+                else if (req.status === 'Rejected') statusClass = 'text-red-600 bg-red-50';
+                else statusClass = 'text-yellow-600 bg-yellow-50';
+                
+                const dateRange = `${req.startDate} to ${req.endDate}`;
+                const date = req.timestamp ? new Date(req.timestamp.toDate()).toLocaleDateString() : 'N/A';
+
+                return `
+                    <div class="p-3 border rounded-lg ${statusClass}">
+                        <div class="flex justify-between items-start">
+                            <p class="font-semibold">Reason: ${req.reason.substring(0, 30)}...</p>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full ${statusClass.replace('-600', '-800').replace('-50', '-100')}">${req.status}</span>
+                        </div>
+                        <p class="text-sm text-gray-700 mt-1">Dates: ${dateRange}</p>
+                        <p class="text-xs text-gray-500 mt-1">Submitted: ${date}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Renders the Issue Tracking list
+        function renderIssueTracking(issues) {
+            const container = document.getElementById('issue-tracking-list');
+            if (issues.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No issues reported yet. All clear!</p>';
+                return;
+            }
+
+            container.innerHTML = issues.map(issue => {
+                let statusColor = '';
+                if (issue.status === 'Resolved') statusColor = 'bg-green-200 text-green-800';
+                else if (issue.status === 'In Progress') statusColor = 'bg-yellow-200 text-yellow-800';
+                else statusColor = 'bg-red-200 text-red-800';
+
+                const date = issue.timestamp ? new Date(issue.timestamp.toDate()).toLocaleDateString() : 'N/A';
+
+                return `
+                    <div class="p-3 border border-gray-200 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold text-gray-800">${issue.type} - ${issue.location}</p>
+                            <p class="text-sm text-gray-600 truncate max-w-xs">${issue.description}</p>
+                            <p class="text-xs text-gray-500 mt-1">Reported: ${date}</p>
+                        </div>
+                        <span class="text-xs font-medium px-3 py-1 rounded-full ${statusColor}">${issue.status}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- Core Action Functions ---
+
+        // 1. Submit Mess Feedback
+        window.submitMessFeedback = async function() {
+            const mealType = document.getElementById('feedback-meal-type').value;
+            const rating = parseFloat(document.getElementById('rating-input').value);
+            const feedbackMsg = document.getElementById('feedback-message');
+            feedbackMsg.style.display = 'block';
+
+            if (!rating || rating < 1 || rating > 5) {
+                feedbackMsg.className = 'mt-2 text-sm text-center text-red-500';
+                feedbackMsg.textContent = "Please provide a valid rating between 1 and 5.";
+                return;
+            }
+            if (!db || !userId) {
+                feedbackMsg.className = 'mt-2 text-sm text-center text-red-500';
+                feedbackMsg.textContent = "Error: Not connected to the database. Please reload.";
+                return;
+            }
+
+            try {
+                // Submit feedback as a private document
+                await addDoc(collection(db, getCollectionPath('feedback')), {
+                    userId: userId,
+                    mealType: mealType,
+                    rating: rating,
+                    timestamp: serverTimestamp()
+                });
+
+                feedbackMsg.className = 'mt-2 text-sm text-center text-green-600';
+                feedbackMsg.textContent = `Thank you! Your ${mealType} feedback has been recorded.`;
+                document.getElementById('rating-input').value = '';
+
+                // Note: The UI for average rating relies on a separate process (admin/backend) 
+                // to aggregate this feedback and update the main menu document. 
+                // We show the success message to the user immediately.
+            } catch (e) {
+                console.error("Error submitting feedback: ", e);
+                feedbackMsg.className = 'mt-2 text-sm text-center text-red-500';
+                feedbackMsg.textContent = "Submission failed. Please try again.";
+            }
+            setTimeout(() => { feedbackMsg.style.display = 'none'; }, 5000);
+        }
+
+        // 2. Submit Leave Request
+        document.getElementById('leave-request-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const reason = document.getElementById('leave-reason').value;
+            const requestMsg = document.getElementById('leave-request-message');
+            requestMsg.style.display = 'block';
+
+            if (!db || !userId) {
+                requestMsg.className = 'mt-2 text-sm text-center text-red-500';
+                requestMsg.textContent = "Error: Not connected to the database. Please reload.";
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, getCollectionPath('leave_requests')), {
+                    userId: userId,
+                    userName: userName, // Using placeholder name
+                    startDate: startDate,
+                    endDate: endDate,
+                    reason: reason,
+                    status: "Pending", // Initial status
+                    timestamp: serverTimestamp()
+                });
+
+                requestMsg.className = 'mt-2 text-sm text-center text-green-600';
+                requestMsg.textContent = "Leave request submitted successfully! Check status on the right.";
+                document.getElementById('leave-request-form').reset();
+            } catch (e) {
+                console.error("Error submitting leave request: ", e);
+                requestMsg.className = 'mt-2 text-sm text-center text-red-500';
+                requestMsg.textContent = "Submission failed. Please try again.";
+            }
+            setTimeout(() => { requestMsg.style.display = 'none'; }, 5000);
+        };
+        
+        // 3. Submit Issue Report (Existing Feature)
+        window.submitIssueReport = async function() {
+            const type = document.getElementById('issue-type').value;
+            const location = document.getElementById('issue-location').value.trim();
+            const description = document.getElementById('issue-description').value.trim();
+            const issueMsg = document.getElementById('issue-report-message');
+            issueMsg.style.display = 'block';
+
+            if (!location || !description) {
+                issueMsg.className = 'mt-2 text-sm text-center text-red-500';
+                issueMsg.textContent = "Location and description are required.";
+                return;
+            }
+            if (!db || !userId) {
+                issueMsg.className = 'mt-2 text-sm text-center text-red-500';
+                issueMsg.textContent = "Error: Not connected to the database. Please reload.";
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, getCollectionPath('issues')), {
+                    userId: userId,
+                    type: type,
+                    location: location,
+                    description: description,
+                    status: "Reported", // Initial status
+                    timestamp: serverTimestamp()
+                });
+
+                issueMsg.className = 'mt-2 text-sm text-center text-green-600';
+                issueMsg.textContent = "Maintenance report submitted! We'll get right on it.";
+                document.getElementById('issue-location').value = '';
+                document.getElementById('issue-description').value = '';
+            } catch (e) {
+                console.error("Error submitting issue report: ", e);
+                issueMsg.className = 'mt-2 text-sm text-center text-red-500';
+                issueMsg.textContent = "Submission failed. Please try again.";
+            }
+            setTimeout(() => { issueMsg.style.display = 'none'; }, 5000);
+        }
+
+        // --- Demo/Placeholder Setup (For initial testing) ---
+        // This function adds a placeholder menu and notice if none exists, to show the features work instantly.
+        window.setupPlaceholders = async function() {
+            if (!db) return;
+            const todayDateId = getTodayDateId();
+            const menuDocRef = doc(db, getCollectionPath('mess_menu'), todayDateId);
+
+            // 1. Create Placeholder Menu (if missing)
+            await setDoc(menuDocRef, {
+                date: todayDateId,
+                meals: {
+                    Breakfast: { items: ["Bread Omelette", "Tea", "Juice"], feedback: 4.5 },
+                    Lunch: { items: ["Rice, Dal, Seasonal Veg", "Salad"], feedback: 4.2 },
+                    Snack: { items: ["Samosa & Chatni", "Coffee"], feedback: 4.0 },
+                    Dinner: { items: ["Chicken/Paneer Curry", "Roti, Rice", "Dessert"], feedback: 4.7 }
+                }
+            }, { merge: true }).catch(e => console.error("Error creating menu placeholder:", e));
+
+            // 2. Create Placeholder Notice (if missing)
+            const noticesCollectionRef = collection(db, getCollectionPath('notices'));
+            const noticeTitle = "Holiday Gate Hours Notice";
+            // Check if a notice with this title already exists to prevent spamming
+            // Note: In a real app, you'd query by title, but here we simply try to add.
+             await addDoc(noticesCollectionRef, {
+                timestamp: serverTimestamp(),
+                title: noticeTitle,
+                content: "The main gate will remain open until 11:30 PM this Saturday for the festival. All residents must report by then.",
+                author: "Warden's Office",
+                isUrgent: true
+            }).catch(() => {/* Ignore if already exists (best effort) */});
+
+        };
+        // Run placeholder setup immediately after auth is confirmed
+        onAuthStateChanged(auth, (user) => {
+             if (user) {
+                // Give a small delay to ensure listeners are set before running placeholders
+                setTimeout(setupPlaceholders, 1000);
+            }
+        });
+        
     </script>
 </body>
 </html>
