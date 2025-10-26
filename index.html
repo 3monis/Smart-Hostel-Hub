@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Hostel Hub</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Global Styles and Inter Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            min-height: 100vh;
+        }
+
+        /* --- PRE-LOADER STYLES --- */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            background-color: #4338ca; /* Indigo 700 */
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Use style transition for fade-out */
+            transition: opacity 0.7s ease-out, visibility 0.7s; 
+            opacity: 1; /* Ensure it starts opaque */
+        }
+
+        /* The main app container should be visible by default, and the preloader hides it. */
+        #app {
+            min-height: 100vh;
+            display: flex; /* Ensure app uses flex for its layout */
+            flex-direction: column;
+        }
+        
+        /* --- Custom Nav Button State --- */
+        .nav-btn.active {
+            background-color: #f5f3ff; /* Indigo 50 */
+            color: #4338ca; /* Indigo 700 */
+            font-weight: 600;
+        }
+        .nav-btn:not(.active):hover {
+            background-color: #f3f4f6; /* Gray 100 */
+        }
+
+        /* Ensure main content takes up full width on small screens */
+        @media (min-width: 1024px) {
+            #main-layout {
+                grid-template-columns: 250px 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ULTIMATE LOADING PRE-LOADER -->
+    <div id="preloader">
+        <div class="text-white text-center animate-pulse p-8 rounded-xl">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-white mx-auto mb-4"></div>
+            <p class="text-xl font-bold tracking-wider">Loading Smart Hostel Hub...</p>
+            <p class="text-sm mt-2 text-indigo-200">Initializing Core Services.</p>
+        </div>
+    </div>
+    
+    <!-- MAIN APP CONTAINER -->
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header id="app-header" class="bg-indigo-700 shadow-lg sticky top-0 z-10">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center h-16">
+                <!-- Removed (DEMO) tag -->
+                <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Smart Hostel Hub</h1>
+                <!-- Changed toast message -->
+                <button onclick="showToast('Feature temporarily disabled.', 'error')" class="p-2 rounded-full hover:bg-indigo-600 transition duration-150 text-white" title="Sign Out">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area with Sidebar and Dynamic View -->
+        <main class="flex-1 container mx-auto p-4 sm:p-6 lg:p-8">
+            <div id="main-layout" class="grid grid-cols-1 lg:grid-cols-layout gap-6">
+                
+                <!-- Navigation Sidebar -->
+                <nav id="sidebar-nav" class="bg-white p-4 rounded-xl shadow-xl h-fit">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4">Features</h2>
+                    <ul class="space-y-1">
+                        <li>
+                            <button id="nav-feedback" onclick="setView('feedback')" class="nav-btn active w-full flex items-center p-3 rounded-lg transition duration-150">
+                                <i data-lucide="utensils" class="w-5 h-5 mr-3"></i> Mess Feedback
+                            </button>
+                        </li>
+                        <li>
+                            <button id="nav-complaint" onclick="setView('complaint')" class="nav-btn w-full flex items-center p-3 rounded-lg transition duration-150">
+                                <i data-lucide="wrench" class="w-5 h-5 mr-3"></i> Issue Reporting
+                            </button>
+                        </li>
+                        <li>
+                            <button id="nav-dashboard" onclick="setView('dashboard')" class="nav-btn w-full flex items-center p-3 rounded-lg transition duration-150">
+                                <i data-lucide="list-checks" class="w-5 h-5 mr-3"></i> Issues Dashboard
+                            </button>
+                        </li>
+                         <li>
+                            <button id="nav-menu" onclick="setView('menu')" class="nav-btn w-full flex items-center p-3 rounded-lg transition duration-150">
+                                <i data-lucide="book-open" class="w-5 h-5 mr-3"></i> Daily Menu
+                            </button>
+                        </li>
+                    </ul>
+                    <div id="user-info" class="mt-4 p-2 text-xs text-gray-500 border-t pt-2">
+                        <!-- Simplified user ID display -->
+                        <span id="user-display">User ID: PRESENTATION_USER</span>
+                    </div>
+                </nav>
+
+                <!-- Dynamic View Area CONTAINER -->
+                <section id="content-view-container" class="flex-1 bg-white p-6 sm:p-8 rounded-xl shadow-xl min-h-[400px]">
+                    <div id="content-view" class="w-full h-full"></div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Toast Notification Area -->
+        <div id="toast-area" class="fixed bottom-4 right-4 space-y-2"></div>
+    </div>
+
+    <!-- SCRIPT FOR PRESENTATION MODE -->
+    <script>
+        // --- CLIENT-SIDE CONFIGURATION (Hidden from UI) ---
+        let userId = 'PRESENTATION_USER';
+        let isAuthReady = true; 
+        
+        // Mock data to display in the dashboard
+        const MOCK_ISSUES = [
+            {
+                id: 'mock-001',
+                type: 'Hostel Maintenance',
+                location: 'Room 403 - AC unit',
+                description: 'The air conditioning unit in room 403 is leaking water and making a loud rattling noise. Needs urgent attention.',
+                status: 'New',
+                createdAt: new Date(Date.now() - 3600000), // 1 hour ago
+                userId: 'user-403'
+            },
+            {
+                id: 'mock-002',
+                type: 'Mess Hygiene',
+                location: 'Dining Hall',
+                description: 'The salad bar tongs were left on the table surface for an extended period.',
+                status: 'In Progress',
+                createdAt: new Date(Date.now() - 86400000), // 1 day ago
+                userId: 'user-mess'
+            },
+            {
+                id: 'mock-003',
+                type: 'Warden Feedback',
+                location: 'General',
+                description: 'Excellent response time from the maintenance team for the lift repair last night.',
+                status: 'Resolved',
+                createdAt: new Date(Date.now() - (2 * 86400000)), // 2 days ago
+                userId: 'user-admin'
+            },
+        ];
+
+        // --- Core Application Loading Function ---
+        function initializeAppAndAuth() {
+            const preloader = document.getElementById('preloader');
+            
+            // 1. Load initial view
+            setView('feedback');
+            
+            // 2. Hide the preloader using the CSS transition
+            preloader.style.opacity = '0';
+            
+            // 3. Completely remove the preloader element after transition ends
+            setTimeout(() => {
+                preloader.style.visibility = 'hidden';
+                preloader.remove();
+            }, 700);
+        }
+
+        window.onload = initializeAppAndAuth;
+
+
+        // --- Utility Functions ---
+
+        /** Shows a temporary toast notification */
+        window.showToast = function(message, type = 'success') {
+            const toastArea = document.getElementById('toast-area');
+            const color = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            const icon = type === 'success' ? 'check-circle' : 'x-circle';
+
+            const toast = document.createElement('div');
+            toast.className = `${color} text-white px-4 py-3 rounded-xl shadow-lg flex items-center max-w-xs`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 mr-3"></i> ${message}`;
+
+            toastArea.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        }
+
+        /** Converts a string to Sentence Case */
+        function toSentenceCase(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        // --- Data Submission Functions (MOCKED) ---
+
+        /** Mocks submission of mess feedback */
+        window.submitMessFeedback = function() {
+            if (!isAuthReady) return showToast("Application is initializing. Please try again.", 'error');
+
+            const ratingElement = document.getElementById('overall-rating');
+            const commentElement = document.getElementById('overall-comment');
+
+            const rating = ratingElement ? parseInt(ratingElement.value, 10) : 0;
+            const comment = commentElement ? commentElement.value.trim() : '';
+
+            if (rating === 0) {
+                return showToast("Please select an overall meal rating.", 'error');
+            }
+
+            // MOCKED SUCCESS RESPONSE
+            showToast(`Feedback for today's meal submitted successfully!`, 'success');
+            
+            // Reset form
+            if(ratingElement) ratingElement.value = '5';
+            if(commentElement) commentElement.value = '';
+        };
+
+        /** Mocks submission of a General Issue/Complaint */
+        window.submitComplaint = function() {
+            if (!isAuthReady) return showToast("Application is initializing. Please try again.", 'error');
+
+            const type = document.getElementById('issue-type').value;
+            const description = document.getElementById('issue-description').value.trim();
+
+            if (!type || !description) return showToast("Please select a category and provide a detailed description.", 'error');
+
+            // MOCKED SUCCESS RESPONSE
+            showToast(`Issue related to "${type}" reported successfully.`, 'success');
+            
+            // Reset form
+            document.getElementById('issue-location').value = '';
+            document.getElementById('issue-description').value = '';
+        };
+
+        // --- Data Fetching and Real-Time Updates (MOCKED) ---
+
+        /** Uses mock data for the dashboard */
+        function fetchIssues() {
+            // In presentation mode, we just pass the mock data immediately.
+            renderDashboard(MOCK_ISSUES);
+        }
+
+        // --- View Rendering Logic ---
+
+        window.setView = function(viewName) {
+            if (!isAuthReady) return showToast("Application services are not ready yet.", 'error');
+
+            const contentView = document.getElementById('content-view');
+
+            // Subtle content transition
+            contentView.style.opacity = '0';
+            
+            // Clear current content
+            contentView.innerHTML = '';
+
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            const activeBtn = document.getElementById(`nav-${viewName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            setTimeout(() => {
+                switch (viewName) {
+                    case 'feedback':
+                        contentView.innerHTML = renderMessFeedbackForm();
+                        break;
+                    case 'complaint':
+                        contentView.innerHTML = renderComplaintForm();
+                        break;
+                    case 'dashboard':
+                        contentView.innerHTML = renderDashboardPlaceholder();
+                        fetchIssues(); // Calls the mock data function
+                        break;
+                    case 'menu':
+                        contentView.innerHTML = renderDailyMenu();
+                        break;
+                    default:
+                        contentView.innerHTML = renderMessFeedbackForm();
+                }
+                lucide.createIcons();
+                // Fade content back in
+                contentView.style.opacity = '1';
+                contentView.style.transition = 'opacity 0.3s ease-in-out';
+            }, 50); // Small delay to allow transition effect
+        };
+
+        function renderMessFeedbackForm() {
+            return `
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Daily Mess Feedback</h2>
+                <div class="p-6 bg-gray-50 rounded-xl shadow-inner">
+                    <p class="text-gray-600 mb-6">Rate today's meal to help us auto-optimize the menu and improve food quality. Your input directly influences future meals!</p>
+                    
+                    <!-- Overall Rating Section -->
+                    <div class="mb-6">
+                        <label for="overall-rating" class="block text-sm font-semibold text-gray-700 mb-2">Overall Meal Rating (1 = Terrible, 5 = Excellent)</label>
+                        <select id="overall-rating" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150">
+                            <option value="5" selected>5 - Excellent, I loved it!</option>
+                            <option value="4">4 - Good, Satisfactory</option>
+                            <option value="3">3 - Okay, Nothing special</option>
+                            <option value="2">2 - Poor, Needs significant improvement</option>
+                            <option value="1">1 - Terrible, Barely edible</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Detailed Comment Section -->
+                    <div class="mb-8">
+                        <label for="overall-comment" class="block text-sm font-semibold text-gray-700 mb-2">Suggestions / Detailed Comment (Optional)</label>
+                        <textarea id="overall-comment" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150" placeholder="e.g., 'The gravy was too salty' or 'We need more variety in breakfast.'"></textarea>
+                    </div>
+
+                    <button onclick="submitMessFeedback()" class="px-6 py-3 bg-indigo-700 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-800 transition duration-200">
+                        Submit Feedback
+                    </button>
+                </div>
+            `;
+        }
+
+
+        function renderComplaintForm() {
+            return `
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">General Issue & Query Reporting</h2>
+                <div class="bg-gray-50 p-6 rounded-xl shadow-inner">
+                    <p class="text-gray-600 mb-6">Report broken facilities, provide feedback on staff, or submit a college-related query.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="issue-type" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select id="issue-type" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150">
+                                <option value="">Select a Category</option>
+                                <option value="Hostel Maintenance">Hostel Maintenance (Fan, Tap, Wi-Fi)</option>
+                                <option value="Warden Feedback">Warden Feedback</option>
+                                <option value="Staff/Worker Feedback">Staff/Worker Feedback (Cleaning, Mess)</option>
+                                <option value="College Query">College Query (Administration, Fees, etc.)</option>
+                                <option value="Mess Hygiene">Mess/Hygiene Issue</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="issue-location" class="block text-sm font-medium text-gray-700 mb-2">Specific Location / Staff Name (Optional)</label>
+                            <input type="text" id="issue-location" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150" placeholder="e.g., Room 301 Fan, Mess Worker John Doe">
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label for="issue-description" class="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
+                        <textarea id="issue-description" rows="5" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150" placeholder="Please describe the issue or query clearly."></textarea>
+                    </div>
+
+                    <button onclick="submitComplaint()" class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-md hover:bg-red-700 transition duration-200">
+                        Report Issue / Submit Query
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderDashboardPlaceholder() {
+            return `
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Open Issues Dashboard</h2>
+                <!-- Removed DEMO MODE warning -->
+                <div id="issues-list" class="space-y-4">
+                    <div class="text-gray-500 text-center p-8 bg-gray-100 rounded-xl">
+                        <p>Loading issues...</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        /** Renders the list of issues using MOCK data */
+        function renderDashboard(issues) {
+            const issuesList = document.getElementById('issues-list');
+            if (!issuesList) return;
+
+            if (issues.length === 0) {
+                issuesList.innerHTML = `<div class="text-center p-8 bg-green-50 rounded-xl border border-green-200 text-green-700">No issues currently open.</div>`;
+                return;
+            }
+
+            // Sort by creation date (newest first)
+            const issueCards = issues.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map(issue => {
+                let statusColor = 'bg-gray-500';
+                if (issue.status === 'New') statusColor = 'bg-red-500';
+                else if (issue.status === 'In Progress') statusColor = 'bg-yellow-500';
+                else if (issue.status === 'Resolved') statusColor = 'bg-green-500';
+                
+                const date = issue.createdAt ? issue.createdAt.toLocaleString() : 'N/A';
+                const locationDisplay = issue.location && issue.location !== 'N/A' ? `<span class="font-medium text-gray-900">${issue.location} - </span>` : '';
+
+                return `
+                    <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 ${issue.status === 'New' ? 'border-red-500' : issue.status === 'In Progress' ? 'border-yellow-500' : 'border-green-500'} transition duration-150 hover:shadow-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-semibold text-gray-800">${toSentenceCase(issue.type)} Report</h3>
+                            <span class="px-3 py-1 text-xs font-medium text-white rounded-full ${statusColor}">
+                                ${issue.status}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-3">
+                            ${locationDisplay} Reported by User ID: <span class="font-mono text-xs text-gray-600">${issue.userId}</span> on ${date}
+                        </p>
+                        <p class="text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">${issue.description}</p>
+                    </div>
+                `;
+            }).join('');
+
+            issuesList.innerHTML = issueCards;
+        }
+
+        // Mock Menu Data
+        const mockMenu = [
+            { time: "Breakfast (7:30 AM)", id: "breakfast", items: [
+                { name: "Poha", calories: 250, allergens: ["Nuts"], note: "Vote: 4.2/5" },
+                { name: "Boiled Eggs", calories: 80, allergens: ["Eggs"], note: "Vote: 4.5/5" },
+                { name: "Milk & Corn Flakes", calories: 150, allergens: ["Dairy", "Gluten"], note: "" }
+            ]},
+            { time: "Lunch (1:00 PM)", id: "lunch", items: [
+                { name: "Dal Tadka", calories: 180, allergens: [], note: "Vote: 3.1/5" },
+                { name: "Aloo Gobi", calories: 220, allergens: [], note: "" },
+                { name: "3 Chapatis", calories: 240, allergens: ["Gluten"], note: "" },
+                { name: "Rice & Salad", calories: 200, allergens: [], note: "" }
+            ]},
+            { time: "Snack (5:00 PM)", id: "snack", items: [
+                { name: "Samosa (1 pc)", calories: 280, allergens: ["Gluten"], note: "Vote: 4.6/5 (Popular!)" },
+                { name: "Chai / Coffee", calories: 50, allergens: ["Dairy"], note: "" }
+            ]}
+            ,
+            { time: "Dinner (8:00 PM)", id: "dinner", items: [
+                { name: "Chicken Curry / Paneer Butter Masala", calories: 350, allergens: ["Dairy"], note: "" },
+                { name: "Jeera Rice", calories: 200, allergens: [], note: "" },
+                { name: "Raita", calories: 100, allergens: ["Dairy"], note: "Vote: 4.8/5" }
+            ]}
+        ];
+
+
+        function renderDailyMenu() {
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Get filter state
+            const filterElement = document.getElementById('allergy-filter');
+            const filterValue = filterElement ? filterElement.value : 'None';
+            let totalCalories = 0;
+
+            const menuHTML = mockMenu.map(meal => {
+                const filteredItems = meal.items.filter(item => {
+                    const containsFilteredAllergen = item.allergens.includes(filterValue);
+                    return filterValue === 'None' || !containsFilteredAllergen;
+                });
+
+                filteredItems.forEach(item => totalCalories += item.calories);
+
+                if (filteredItems.length === 0 && filterValue !== 'None') {
+                    return `
+                        <div class="bg-yellow-100 p-5 rounded-xl shadow-lg border-t-4 border-yellow-500">
+                            <h3 class="text-xl font-bold text-yellow-700 mb-2">${meal.time}</h3>
+                            <p class="text-sm">No items found for this meal that meet the **${filterValue}-free** filter criteria.</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-white p-5 rounded-xl shadow-lg border-t-4 border-indigo-500">
+                        <h3 class="text-2xl font-bold text-indigo-700 mb-3">${meal.time}</h3>
+                        <ul class="space-y-2">
+                            ${filteredItems.map(item => `
+                                <li class="flex justify-between items-center p-3 border-b border-gray-100 last:border-b-0">
+                                    <div class="flex-1">
+                                        <span class="font-medium text-gray-800">${item.name}</span>
+                                        <p class="text-xs text-gray-500">
+                                            Allergens: <span class="text-red-600">${item.allergens.join(', ') || 'None'}</span> | Calories: ${item.calories} kcal
+                                        </p>
+                                    </div>
+                                    <span class="text-sm font-semibold text-green-600">${item.note}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Today's Mess Menu & Tracking</h2>
+                <p class="text-xl font-medium text-gray-600 mb-6">${today}</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-100 p-4 rounded-xl shadow-inner mb-6">
+                    <div>
+                        <label for="allergy-filter" class="block text-sm font-medium text-gray-700 mb-1">Allergy Filter **(Exclusion)**</label>
+                        <select id="allergy-filter" onchange="setView('menu')" class="w-full p-2 border border-gray-300 rounded-lg">
+                            <option value="None" ${filterValue === 'None' ? 'selected' : ''}>Show All (No Filter)</option>
+                            <option value="Gluten" ${filterValue === 'Gluten' ? 'selected' : ''}>Gluten-Free</option>
+                            <option value="Dairy" ${filterValue === 'Dairy' ? 'selected' : ''}>Dairy-Free</option>
+                            <option value="Nuts" ${filterValue === 'Nuts' ? 'selected' : ''}>Nut-Free</option>
+                            <option value="Eggs" ${filterValue === 'Eggs' ? 'selected' : ''}>Egg-Free</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 flex flex-col justify-center bg-indigo-100 p-3 rounded-lg border border-indigo-300">
+                        <p class="text-sm font-medium text-indigo-700">Estimated Total Calories (Filtered Menu):</p>
+                        <p class="text-2xl font-extrabold text-indigo-900">${totalCalories} kcal</p>
+                    </div>
+                </div>
+
+                <div id="daily-menu-list" class="space-y-6">
+                    ${menuHTML}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
